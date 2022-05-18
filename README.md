@@ -1,0 +1,4 @@
+- 👋 Hi, I’m Karthik Garimella
+- 👀 I’m interested in Python, SQL and Data Visualization
+- 🌱 I’m currently learning Python, SQL and Data Visualization
+- 📫 Reach me at @karthikgarimella37@gmail.com
