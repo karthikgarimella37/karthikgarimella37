@@ -1,4 +1,4 @@
-- 👋 Hi, I’m Karthik Garimella
-- 👀 I’m interested in Python, SQL and Data Visualization
-- 🌱 I’m currently learning Python, SQL and Data Visualization
-- 📫 Reach me at @karthikgarimella37@gmail.com
+- 👋 Hi, I’m Karthik Garimella (he/him)
+- 👀 I’m interested in Machine Learning, ETL Processes and Data Visualization
+- 🌱 I’m currently learning Artificial Intelligence, Computational Statistics in R and Intro to Data Science in Python
+- 📫 Reach me at @karthikgarimella37@gmail.com or kgarimel@mtu.edu
