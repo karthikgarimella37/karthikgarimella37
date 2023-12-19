@@ -1,0 +1,669 @@
+---
+title: "Final Project - Bootstrap Confidence Intervals"
+author: "Karthik Garimella"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: paged
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    highlight: pygments
+    theme: paper
+    toc_depth: 4
+---
+
+```{r, echo=FALSE}
+library(ggplot2)
+```
+
+
+# Getting the data
+```{r}
+data <- read.csv('final_project data.csv', row.names = 1)
+data
+```
+
+
+### Points
+```{r, echo=FALSE}
+data[, 'Points']
+```
+
+### Expected Points
+```{r, echo=FALSE}
+data[, 'Expected.Points']
+```
+
+
+# Point and Line Plots
+```{r, echo=FALSE}
+ggplot(data, aes(x = Season, group = 1)) +
+  geom_point(aes(y = Points, color = 'Points'), size = 3) +
+  geom_point(aes(y = Expected.Points, color = 'Expected.Points'), size = 3)+
+  geom_line(aes(y = Points, color = 'Points'))+
+  geom_line(aes(y = Expected.Points, color = 'Expected.Points'))+
+  ggtitle('Points & Exp. Points throughout last 9 seasons')+
+  theme_minimal()+
+  theme(
+    panel.grid.major = element_line(color = "darkgray", linetype = "dashed"),
+    panel.grid.minor = element_line(color = "gray", linetype = "dotted")
+  )
+```
+
+```{r, echo=FALSE}
+ggplot(data, aes(x = Season, group = 1)) +
+  geom_point(aes(y = Goals, color = 'Goals'), size = 3) +
+  geom_point(aes(y = Expected.Goals, color = 'Expected.Goals'), size = 3)+
+  geom_line(aes(y = Goals, color = 'Goals'))+
+  geom_line(aes(y = Expected.Goals, color = 'Expected.Goals'))+
+  ggtitle('Goals & Exp. Goals throughout last 9 seasons')+
+  theme_minimal()+
+  theme(
+    panel.grid.major = element_line(color = "darkgray", linetype = "dashed"),
+    panel.grid.minor = element_line(color = "gray", linetype = "dotted")
+  )
+```
+
+
+
+```{r, echo=FALSE}
+ggplot(data, aes(x = Season, group = 1)) +
+  geom_point(aes(y = Goals, color = 'Goals'), size = 3) +
+  geom_point(aes(y = Goals.Against, color = 'Goals.Against'), size = 3)+
+  geom_line(aes(y = Goals, color = 'Goals'))+
+  geom_line(aes(y = Goals.Against, color = 'Goals.Against'))+
+  ggtitle('Goals v Goals Against throughout last 9 seasons')+
+  theme_minimal()+
+  theme(
+    panel.grid.major = element_line(color = "darkgray", linetype = "dashed"),
+    panel.grid.minor = element_line(color = "gray", linetype = "dotted")
+  )
+
+```
+```{r, echo=FALSE}
+ggplot(data, aes(x = Season, group = 1)) +
+  geom_point(aes(y = Expected.Goals.Against, color = 'Expected.Goals.Against'), size = 3) +
+  geom_point(aes(y = Goals.Against, color = 'Goals.Against'), size = 3)+
+  geom_line(aes(y = Expected.Goals.Against, color = 'Expected.Goals.Against'))+
+  geom_line(aes(y = Goals.Against, color = 'Goals.Against'))+
+  ggtitle('Goals Against & Expected Goals Against throughout last 9 seasons')+
+  theme_minimal()+
+  theme(
+    panel.grid.major = element_line(color = "darkgray", linetype = "dashed"),
+    panel.grid.minor = element_line(color = "gray", linetype = "dotted")
+  )
+
+```
+
+
+## Mean of Points
+```{r, echo=FALSE}
+mean(data$Points)
+```
+
+## Mean of Expected Points
+```{r, echo=FALSE}
+mean(data$Expected.Points)
+```
+<br>
+Although the mean is close for Points and Expected Points, how much confident are we that there is an over-performance
+
+
+Doing the bootstrap re-sampling to find difference between points, expected points and see the confidence intervals. Checks if they overlap or not, if they do not, then it shows considerable over-performance. If not, then the over-performance is not statistically significant.
+
+
+
+# Declaring Simulation Samples
+```{r}
+B <- 1000
+N <- 5000
+```
+
+
+```{r, echo=FALSE}
+n <- nrow(data)
+
+data_points <- data[ ,'Points']
+
+data_exp_points <- data[ , 'Expected.Points']
+```
+
+# Bootstrap Sampling for Expected Points and Points
+```{r, echo=FALSE}
+data_points_boot <- replicate(B, data_points[sample.int(n, n, replace = TRUE)])
+
+data_exp_points_boot <- replicate(B, data_exp_points[sample.int(n, n, replace = TRUE)])
+
+# Using apply() to get mean() of the boot samples
+data_points_mean <- apply(data_points_boot, 2, mean)
+
+data_exp_points_mean <- apply(data_exp_points_boot, 2, mean)
+
+```
+
+
+
+```{r, echo=FALSE}
+final_data_points_mean <- mean(data_points_mean)
+
+final_data_exp_points_mean <- mean(data_exp_points_mean)
+```
+
+### Correlation between the data
+```{r, echo=FALSE}
+cor(data_exp_points_mean, data_points_mean)
+```
+
+
+### Histogram of Samples Generated
+```{r, echo=FALSE}
+hist(data_points_mean, breaks = 100, prob = TRUE, col = 'green',
+  main = 'Histogram for Points & Exp. Points Simulation', density = 1, xlim = c(55, 80),
+  xlab = 'Points & Exp. Points')
+
+hist(data_exp_points_mean, breaks = 100, prob = TRUE, col = 'red',
+  density = 0.9, add = TRUE, alpha = 0.5)
+
+legend('topright', legend = c('Actual Points', 'Expected Points'),
+       fill = c('green', 'red'))
+```
+
+### Boxplot of Points and Exp. Points
+```{r, echo=FALSE}
+box_data <- data.frame(
+  Group = rep(c("Expected Points", "Actual Points"), each = length(data_exp_points_mean)),
+  Value = c(data_exp_points_mean, data_points_mean)
+)
+
+# Create a box plot
+ggplot(box_data, aes(x = Group, y = Value, fill = Group)) +
+  geom_boxplot()+
+  labs(title = "Box Plot of Expected Points vs. Actual Points",
+       x = "Group",
+       y = "Value")
+```
+
+
+
+### Standard Normal Confidence Interval
+```{r}
+norm_ci_func <- function(x){
+  z <- qnorm(.975)
+  
+  norm_mean <- mean(x)
+  norm_sd <- sd(x)
+  norm_ci <- norm_mean + c(-1 , 1) * z * norm_sd
+  
+  return(norm_ci)
+}
+
+```
+
+### Basic Bootstrap Confidence Interval
+```{r}
+basic_boot_ci_func <- function(x,y){
+  basic_boot_ci <- 2 * mean(x) - quantile(y, c(0.975, 0.025))
+}
+
+```
+
+### Percentile Bootstrap Confidence Interval
+```{r}
+percent_ci_func <- function(x){
+  return(quantile(x, c(0.025, 0.975)))
+}
+
+```
+
+
+### BCa Bootstrap Confidence Intervals
+
+```{r}
+bca_boot_ci_func <- function(x,y){
+
+theta_hat <- mean(x)
+p <- mean(y < theta_hat)
+z0_hat <- qnorm(p)
+
+point_jack <- sapply(1:n, function(i) mean(x[-i]))
+a_hat <- sum((mean(point_jack) - point_jack) ^3) / (6 * sum((point_jack - mean(point_jack))^2) ^(3/2))
+
+z <- qnorm(c(0.025, 0.975))
+
+alpha <- pnorm(z0_hat + (z0_hat+z)/(1-a_hat*(z0_hat+z)))
+
+bca_ci_points <- quantile(y, alpha)
+
+return(bca_ci_points)
+
+}
+```
+
+
+
+# Monte Carlo Simulation and Bootstrapping
+
+```{r, echo=FALSE}
+points_mu <- mean(data[, 'Points'])
+exp_points_mu <- mean(data[, 'Expected.Points'])
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+B <- 1000
+N <- 5000
+n <- nrow(data)
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+Temp_Points_df <- data.frame()
+Points_df <- data.frame()
+Exp.Points_df <- data.frame()
+```
+
+### Standard Normal CI
+```{r, eval=FALSE}
+n_list <- list(5, 7, 9)
+
+for(lst in n_list){
+for(rep in 1:N){ # Monte Carlo Simulation
+
+  # Bootstrap Sampling
+  points_boot <- replicate(B, data_points[sample.int(lst, lst, replace = TRUE)]) 
+  exp_points_boot <- replicate(B, data_exp_points[sample.int(lst, lst, replace = TRUE)])
+  
+  data_points_mean <- apply(points_boot, 2, mean)
+  data_exp_points_mean <- apply(exp_points_boot, 2, mean)
+  
+  # Mean of Samples
+  mean_points_boot <- mean(data_points_mean) # Mean of Bootstrap Sample Points
+  mean_exp_points_boot <- mean(data_exp_points_mean)
+  
+  # Standard Normal CI
+  norm_ci_points <- apply(points_boot, 1, norm_ci_func) # Points
+  norm_ci_exp_points <- apply(exp_points_boot, 1, norm_ci_func) #norm_ci_func(data_exp_points_mean) # Exp Points
+  
+  # Cov Prob and Width for Points
+  coverage_probability <- mean(points_mu >= norm_ci_points[1] & points_mu <= norm_ci_points[2])
+  average_width <- norm_ci_points[2] - norm_ci_points[1]
+  
+  # Cov Prob and Width for Exp. Points
+  exp_coverage_probability <- mean(exp_points_mu >= norm_ci_exp_points[1] & points_mu <= norm_ci_exp_points[2])
+  exp_average_width <- norm_ci_exp_points[2] - norm_ci_exp_points[1]
+  
+}
+
+cov_se <- sqrt(mean(coverage_probability) * (1 - mean(coverage_probability))/N)
+cov_exp_se <- sqrt(mean(exp_coverage_probability) * (1 - mean(exp_coverage_probability))/N)
+
+Temp_Points_df <- data.frame(Method = 'Standard Normal',
+                             Column = 'Points', n = lst,
+                             mean = mean_points_boot,
+                          Coverage_Prob = mean(coverage_probability),
+                          LCL = norm_ci_points[1],
+                          UCL = norm_ci_points[2],
+                          CovLCL = mean(coverage_probability) - 2 * cov_se,
+                          CovUCL = mean(coverage_probability) + 2 * cov_se,
+                          Width = mean(average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+  
+Temp_Points_df <- data.frame(Method = 'Standard Normal',
+                             Column = 'Exp. Points', n = lst,
+                             mean = mean_exp_points_boot,
+                          Coverage_Prob = mean(exp_coverage_probability),
+                          LCL = norm_ci_exp_points[1],
+                          UCL = norm_ci_exp_points[2],
+                          CovLCL = mean(exp_coverage_probability) - 2 * cov_exp_se,
+                          CovUCL = mean(exp_coverage_probability) + 2 * cov_exp_se,
+                          Width = mean(exp_average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+
+}
+```
+
+
+
+### Basic Bootstrap CI
+```{r, eval=FALSE, echo=FALSE}
+for (lst in n_list) {
+for(rep in 1:N){ # Monte Carlo Simulation
+
+  # Bootstrap Sampling
+  points_boot <- replicate(B, data_points[sample.int(lst, lst, replace = TRUE)]) 
+  exp_points_boot <- replicate(B, data_exp_points[sample.int(lst, lst, replace = TRUE)])
+  
+  data_points_mean <- apply(points_boot, 2, mean)
+  data_exp_points_mean <- apply(exp_points_boot, 2, mean)
+  
+  # Mean of Samples
+  mean_points_boot <- mean(data_points_mean) # Mean of Bootstrap Sample Points
+  mean_exp_points_boot <- mean(data_exp_points_mean)
+  
+  # Basic Boot CI
+  # basic_ci_points <- basic_boot_ci_func(data$Points, data_points_mean) # Points
+  # basic_ci_exp_points <- basic_boot_ci_func(data$Exp.Points, data_exp_points_mean) # Exp Points
+  
+  basic_ci_points <- basic_boot_ci_func(data_points, points_boot)
+    # apply(data_points, 1, basic_boot_ci_func, y = points_boot)
+  basic_ci_exp_points <- basic_boot_ci_func(data_exp_points, exp_points_boot)
+  
+  
+  # Cov Prob and Width for Points
+  coverage_probability <- mean(points_mu >= basic_ci_points[1] & points_mu <= basic_ci_points[2])
+  average_width <- basic_ci_points[2] - basic_ci_points[1]
+  # Cov Prob and Width for Exp. Points
+  exp_coverage_probability <- mean(exp_points_mu >= basic_ci_exp_points[1] & points_mu <= basic_ci_exp_points[2])
+  exp_average_width <- basic_ci_exp_points[2] - basic_ci_exp_points[1]
+  
+}
+
+cov_se <- sqrt(mean(coverage_probability) * (1 - mean(coverage_probability))/N)
+cov_exp_se <- sqrt(mean(exp_coverage_probability) * (1 - mean(exp_coverage_probability))/N)
+
+Temp_Points_df <- data.frame(Method = 'Basic Bootstrap',
+                             Column = 'Points', n = lst,
+                             mean = mean_points_boot,
+                          Coverage_Prob = mean(coverage_probability),
+                          LCL = basic_ci_points[1],
+                          UCL = basic_ci_points[2],
+                          CovLCL = mean(coverage_probability) - 2 * cov_se,
+                          CovUCL = mean(coverage_probability) + 2 * cov_se,
+                          Width = mean(average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+  
+Temp_Points_df <- data.frame(Method = 'Basic Bootstrap',
+                             Column = 'Exp. Points', n = lst,
+                             mean = mean_exp_points_boot,
+                          Coverage_Prob = mean(exp_coverage_probability),
+                          LCL = basic_ci_exp_points[1],
+                          UCL = basic_ci_exp_points[2],
+                          CovLCL = mean(exp_coverage_probability) - 2 * cov_exp_se,
+                          CovUCL = mean(exp_coverage_probability) + 2 * cov_exp_se,
+                          Width = mean(exp_average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+
+}
+```
+
+
+
+### Percentile Bootstrap
+```{r, eval=FALSE, echo=FALSE}
+for(lst in n_list){
+for(rep in 1:N){ # Monte Carlo Simulation
+
+  # Bootstrap Sampling
+  points_boot <- replicate(B, data_points[sample.int(lst, lst, replace = TRUE)]) 
+  exp_points_boot <- replicate(B, data_exp_points[sample.int(lst, lst, replace = TRUE)])
+  
+  data_points_mean <- apply(points_boot, 2, mean)
+  data_exp_points_mean <- apply(exp_points_boot, 2, mean)
+  
+  # Mean of Samples
+  mean_points_boot <- mean(data_points_mean) # Mean of Bootstrap Sample Points
+  mean_exp_points_boot <- mean(data_exp_points_mean)
+  
+  # Basic Boot CI
+  percent_ci_points <- apply(points_boot, 1, percent_ci_func)
+  #percent_ci_func(data_points_mean) # Points
+  percent_ci_exp_points <- apply(exp_points_boot, 1, percent_ci_func)    
+  #percent_ci_func(data_exp_points_mean) # Exp Points
+  
+  # Cov Prob and Width for Points
+  coverage_probability <- mean(points_mu >= percent_ci_points[1] & points_mu <= percent_ci_points[2])
+  average_width <- percent_ci_points[2] - percent_ci_points[1]
+  # Cov Prob and Width for Exp. Points
+  exp_coverage_probability <- mean(exp_points_mu >= percent_ci_exp_points[1] & points_mu <= percent_ci_exp_points[2])
+  exp_average_width <- percent_ci_exp_points[2] - percent_ci_exp_points[1]
+  
+}
+
+cov_se <- sqrt(mean(coverage_probability) * (1 - mean(coverage_probability))/N)
+cov_exp_se <- sqrt(mean(exp_coverage_probability) * (1 - mean(exp_coverage_probability))/N)
+
+Temp_Points_df <- data.frame(Method = 'Percentile',
+                             Column = 'Points', n = lst,
+                             mean = mean_points_boot,
+                          Coverage_Prob = mean(coverage_probability),
+                          LCL = basic_ci_points[1],
+                          UCL = basic_ci_points[2],
+                          CovLCL = mean(coverage_probability) - 2 * cov_se,
+                          CovUCL = mean(coverage_probability) + 2 * cov_se,
+                          Width = mean(average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+  
+Temp_Points_df <- data.frame(Method = 'Percentile',
+                             Column = 'Exp. Points', n = lst,
+                             mean = mean_exp_points_boot,
+                          Coverage_Prob = mean(exp_coverage_probability),
+                          LCL = basic_ci_exp_points[1],
+                          UCL = basic_ci_exp_points[2],
+                          CovLCL = mean(exp_coverage_probability) - 2 * cov_exp_se,
+                          CovUCL = mean(exp_coverage_probability) + 2 * cov_exp_se,
+                          Width = mean(exp_average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+}
+```
+
+
+### BCa Boostrap
+```{r, eval=FALSE, echo=FALSE}
+for(lst in n_list){
+for(rep in 1:N){ # Monte Carlo Simulation
+
+  # Bootstrap Sampling
+  points_boot <- replicate(B, data_points[sample.int(lst, lst, replace = TRUE)]) 
+  exp_points_boot <- replicate(B, data_exp_points[sample.int(lst, lst, replace = TRUE)])
+  
+  data_points_mean <- apply(points_boot, 2, mean)
+  data_exp_points_mean <- apply(exp_points_boot, 2, mean)
+  
+  # Mean of Samples
+  mean_points_boot <- mean(data_points_mean) # Mean of Bootstrap Sample Points
+  mean_exp_points_boot <- mean(data_exp_points_mean)
+  
+  # Basic Boot CI
+  bca_ci_points <- bca_boot_ci_func(data_points, points_boot)
+  #apply(data$Points, 1, bca_boot_ci_func, y = points_boot) # Points
+  bca_ci_exp_points <- bca_boot_ci_func(data_exp_points, exp_points_boot)
+  #apply(data$Exp.Points, 1, bca_boot_ci_func, y = exp_points_boot) # Exp Points
+  
+  # Cov Prob and Width for Points
+  coverage_probability <- mean(points_mu >= bca_ci_points[1] & points_mu <= bca_ci_points[2])
+  average_width <- bca_ci_points[2] - bca_ci_points[1]
+  # Cov Prob and Width for Exp. Points
+  exp_coverage_probability <- mean(exp_points_mu >= bca_ci_exp_points[1] & points_mu <= bca_ci_exp_points[2])
+  exp_average_width <- bca_ci_exp_points[2] - bca_ci_exp_points[1]
+  
+}
+
+cov_se <- sqrt(mean(coverage_probability,  na.rm = TRUE) * (1 - mean(coverage_probability,  na.rm = TRUE))/N)
+cov_exp_se <- sqrt(mean(exp_coverage_probability,  na.rm = TRUE) * (1 - mean(exp_coverage_probability,  na.rm = TRUE))/N)
+
+Temp_Points_df <- data.frame(Method = 'BCa',
+                             Column = 'Points', n = lst,
+                             mean = mean_points_boot,
+                          Coverage_Prob = mean(coverage_probability, na.rm = TRUE),
+                          LCL = bca_ci_points[1],
+                          UCL = bca_ci_points[2],
+                          CovLCL = mean(coverage_probability, na.rm = TRUE) - 2 * cov_se,
+                          CovUCL = mean(coverage_probability, na.rm = TRUE) + 2 * cov_se,
+                          Width = mean(average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+  
+Temp_Points_df <- data.frame(Method = 'BCa',
+                             Column = 'Exp. Points', n = lst,
+                             mean = mean_exp_points_boot,
+                          Coverage_Prob = mean(exp_coverage_probability, na.rm = TRUE),
+                          LCL = bca_ci_exp_points[1],
+                          UCL = bca_ci_exp_points[2],
+                          CovLCL = mean(exp_coverage_probability, na.rm = TRUE) - 2 * cov_exp_se,
+                          CovUCL = mean(exp_coverage_probability, na.rm = TRUE) + 2 * cov_exp_se,
+                          Width = mean(exp_average_width))
+Points_df  <- bind_rows(Points_df , Temp_Points_df)
+}
+```
+
+
+```{r, echo=FALSE, eval=FALSE}
+save(Points_df, file = 'Points_df.Rdata')
+```
+
+```{r, echo=FALSE}
+load('Points_df.Rdata')
+```
+
+### Created DataFrame
+```{r, echo=FALSE}
+Points_df
+```
+
+
+### Plotting
+```{r, echo=FALSE}
+ggplot(Points_df[Points_df$Method == 'Standard Normal', ], aes(x = Column, col = Column))+
+  # geom_line(aes(y = Width ))+
+  geom_point(aes(y = mean, pch = Method))+
+  geom_errorbar(aes(y = Coverage_Prob, ymin = LCL, ymax = UCL), width = .5)+
+  # geom_hline(aes(yintercept = ConfLevel), col = 'black', lty = 1, lwd = 0.5)+
+  facet_wrap(~n, ncol = 3, scales = 'fixed')+
+  labs(title = "Points v Exp. Points CI for altering 'n'")+
+  ylab('Standard Normal CI')+
+  xlab('Points or Exp. Points')
+```
+```{r, echo=FALSE}
+ggplot(Points_df[Points_df$Method == 'Basic Bootstrap', ], aes(x = Column, col = Column))+
+  # geom_line(aes(y = Width ))+
+  geom_point(aes(y = mean, pch = Method))+
+  geom_errorbar(aes(y = Coverage_Prob, ymin = LCL, ymax = UCL), width = .5)+
+  # geom_hline(aes(yintercept = ConfLevel), col = 'black', lty = 1, lwd = 0.5)+
+  facet_wrap(~n, ncol = 3, scales = 'fixed')+
+  labs(title = "Points v Exp. Points CI for differing 'n'")+
+  ylab('Basic Bootstrap CI')+
+  xlab('Points or Exp. Points')
+```
+
+```{r, echo=FALSE}
+ggplot(Points_df[Points_df$Method == 'Percentile', ], aes(x = Column, col = Column))+
+  # geom_line(aes(y = Width ))+
+  geom_point(aes(y = mean, pch = Method))+
+  geom_errorbar(aes(y = Coverage_Prob, ymin = LCL, ymax = UCL), width = .5)+
+  # geom_hline(aes(yintercept = ConfLevel), col = 'black', lty = 1, lwd = 0.5)+
+  facet_wrap(~n, ncol = 3, scales = 'fixed')+
+  labs(title = "Points v Exp. Points CI for differing 'n'")+
+  ylab('Percentile CI')+
+  xlab('Points or Exp. Points')
+```
+
+
+
+```{r, echo=FALSE}
+ggplot(Points_df[Points_df$Method == 'BCa', ], aes(x = Column, col = Column))+
+  # geom_line(aes(y = Width ))+
+  geom_point(aes(y = mean, pch = Method))+
+  geom_errorbar(aes(y = Coverage_Prob, ymin = LCL, ymax = UCL), width = .5)+
+  # geom_hline(aes(yintercept = ConfLevel), col = 'black', lty = 1, lwd = 0.5)+
+  facet_wrap(~n, ncol = 3, scales = 'fixed')+
+  labs(title = "Points v Exp. Points CI for differing 'n'")+
+  ylab('BCa CI')+
+  xlab('Points or Exp. Points')
+```
+
+
+
+
+
+
+
+```{r, echo=FALSE}
+# Error Bar Plot for Confidence Intervals
+ggplot(Points_df, aes(x = Column, y = (LCL + UCL) / 2, ymin = LCL, ymax = UCL)) +
+  geom_errorbar(width = .5, position = position_dodge(0.8), color = "steelblue") +
+  geom_point(aes(col = Method), position = position_dodge(0.8), size = 3) +
+  labs(title = "Confidence Interval Comparison", y = "Mean of CI", ymin = "Lower Bound", ymax = "Upper Bound") +
+  theme_minimal()+
+  facet_wrap(~n , scales = 'free_y', ncol = 2)+
+  labs(title = "Confidence Interval Comparison for alternating 'n'")+
+  ylab('Confidence Intervals')+
+  xlab('Points or Exp. Points')
+
+```
+
+
+```{r, echo=FALSE}
+ggplot(Points_df, aes(x = Column, col = Method))+
+  geom_point(aes(y = mean, pch = Method))+
+  geom_hline(yintercept = mean(data$Points), linetype = "dashed", color = "red")+
+  geom_hline(yintercept = mean(data$Expected.Points), linetype = "dashed", color = "blue")+
+  facet_wrap(~n, ncol= 2, scales = 'free')+
+  labs(title = "Mean for differing 'n'")+
+  ylab('Mean')+
+  xlab('Points or Exp. Points')
+```
+
+
+```{r, echo=FALSE}
+ggplot(Points_df, aes(x = Column, col = Method))+
+  geom_point(aes(y = Width, pch = Method))+
+  facet_wrap(~n, ncol= 2, scales = 'free')+
+  labs(title = "Average Width for differing 'n'")+
+  ylab('Avg. Width')+
+  xlab('Points or Exp. Points')
+```
+
+```{r, echo=FALSE}
+ggplot(Points_df, aes(x = n, col = Method))+
+  geom_line(aes(y = Width),  lty = 2 )+
+  geom_point(aes(y = Width, pch = Method))+
+  facet_wrap(~Method, ncol= 2, scales = 'free')+
+  labs(title = "Average Width for differing CI")+
+  ylab('Avg. Width')+
+  xlab('n')
+```
+
+Due to the extremely small sample size and real world data, the bootstrap sampling methods do not create extreme outliers.
+
+
+```{r, echo=FALSE}
+ggplot(Points_df, aes(x = n, col = Method)) +
+  geom_point(aes(y = Coverage_Prob)) +
+  facet_wrap(~ Method)+
+  labs(title = "Coverage Probability for altering CI's")+
+  ylab('Coverage Probability')+
+  xlab('n')
+```
+
+
+# Conclusion
+
+Although the sample size is small and it is improbable to come up with more real life data without waiting, we can use Bootstrapping and Monte Carlo simulations to generate data and estimate a population mean. We can statistically say that there was slight over-performance given the minute amount of data. We can confirm with the given data that the true parameter i.e. the mean of the Points and Expected Points does lie in the confidence interval with surety in every simulation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
