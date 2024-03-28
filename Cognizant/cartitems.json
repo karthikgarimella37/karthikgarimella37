@@ -1,0 +1,27 @@
+[{
+  "_id": {
+    "$oid": "60dc166fd9ddaf3f284b0dca"
+  },
+  "email": "user1@gmail.com",
+  "books": [
+    {
+      "quantity": 1,
+      "_id": {
+        "$oid": "60dc166fd9ddaf3f284b0dcb"
+      },
+      "bookid": {
+        "$oid": "60dc75378505521de09f4c71"
+      }
+    },
+    {
+      "quantity": 1,
+      "_id": {
+        "$oid": "60dc1ec6d9ddaf3f284b0dcc"
+      },
+      "bookid": {
+        "$oid": "60dc7608dfca213be4b92135"
+      }
+    }
+  ],
+  "__v": 0
+}]

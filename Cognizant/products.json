@@ -1,0 +1,25 @@
+[{
+  "_id": {
+    "$oid": "60dc75378505521de09f4c71"
+  },
+  "available": 8,
+  "title": "twilight",
+  "isbn": 7023,
+  "author": "E.M.Foster",
+  "category": "horror",
+  "discount": "51",
+  "price": 525,
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "60dc7608dfca213be4b92135"
+  },
+  "available": 8,
+  "title": "twilight edition 2",
+  "isbn": 7024,
+  "author": "E.M.Foster",
+  "category": "horror",
+  "discount": "51",
+  "price": 525,
+  "__v": 0
+}]
