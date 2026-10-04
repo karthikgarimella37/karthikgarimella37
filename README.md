@@ -1,4 +1,5 @@
-- 👋 Hi, I’m Karthik Garimella (he/him)
-- 👀 I’m interested in Machine Learning, ETL/ELT Processes and Data Visualization.
-- 🌱 I’m currently working on automating soccer visualizations using a SQL database as the backend and creating a dynamic website to create the plots. [Soccer Analytics Dashboard](https://pldashboard.streamlit.app/)
-- 📫 Reach me at @karthikgarimella37@gmail.com. [My Portfolio](https://www.datascienceportfol.io/karthikgarimella37)
+- Hi, I’m Karthik Garimella (he/him)
+- I’m interested in Machine Learning, ETL/ELT Processes and Data Visualization.
+- I’m currently working on automating soccer visualizations using a SQL database as the backend and creating a dynamic website to create the plots. [Soccer Analytics Dashboard](https://pldashboard.streamlit.app/)
+- Valorant Analytics: https://valorant-stats-production.up.railway.app/
+- Reach me at @karthikgarimella37@gmail.com. [My Portfolio](https://www.datascienceportfol.io/karthikgarimella37)
